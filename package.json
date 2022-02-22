@@ -20,6 +20,7 @@
     "express": "^4.17.2",
     "express-handlebars": "^6.0.2",
     "node-hid": "^2.1.1",
+    "redis": "^4.0.3",
     "ws": "^8.5.0"
   }
 }

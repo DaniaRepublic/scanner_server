@@ -1,37 +1,35 @@
-<html lang="en">
+<!DOCTYPE html>
 <head>
     <title>WebScanner</title>
     <link rel="stylesheet" type="text/css" href="css/home.css"/>
 </head>
 
 <body>
-    <script type="text/javascript" src="js/ws.js"></script>
     <div class="wrapper">
         <div class="header">
             <a href="/">Home</a>
             <a href="/Archive">Archive</a>
         </div>
         <div class="scans">
-            {{#if scans}}
             <div class="scansRow" id="scansRow">
+            {{#if scans}}
                 {{#each scans}}
-                <div class="scan c{{this.code}}" id="{{this.id}}">
-                    <h4>{{this.accepted}}</h4>
+                <div class="scan c{{this.usageStatus}}" id="{{this.id}}">
+                    <h4>{{this.status}}</h4>
                     <h4>{{this.time}}</h4>
+                    {{#if (hasUserName userName)}}
+                    <h4>{{this.userName}}</h4>
+                    {{/if}}
                 </div>
                 {{/each}}
-            </div>
-            {{else}}
-            <div class="scansRow empty">
-                <h3>No scans to display...</h3>
-            </div>
             {{/if}}
+            </div>
         </div>
-        <div class="scanInfo">
+        <div class="scanInfo" id="scanInfo">
 
         </div>
     </div>
-    <script type="text/javascript" src="js/home.js"></script>
+    <script type="text/javascript" src="js/ws.js"></script>
 </body>
 
 </html>

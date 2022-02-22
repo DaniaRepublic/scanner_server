@@ -11,28 +11,41 @@ class WebSocketServer {
         return this.ws;
     }
 
-    initialize() {
+    initialize(redisCli) {
         this.wss.on('connection', (ws) => {
-            console.log("client connected");
-
-            ws.on('message', (messageAsString) => {
-                console.log(messageAsString);
+            ws.on('message', (msgBytes) => {
+                var msgStr = new Buffer.from(msgBytes).toString();
+                // client ping response
+                if (msgStr == 'ping') { 
+                    console.log('client pingin\'');
+                    return;
+                }
+                var msgJSON = JSON.parse(msgStr);
+                if (msgJSON.requestType == 'scanInfoRequest') {
+                    var scanId = msgJSON.scanId;
+                    (async () => {
+                        var scanData = await redisCli.get(scanId);
+                        var scanDataJSON = JSON.parse(scanData);
+                        scanDataJSON.scanInfoResponse = 1;
+                        this.sendScan(scanDataJSON);
+                    })();
+                }
             });
 
             ws.on("close", () => {
-                console.log("client disconnected");
+                this.ws = null;
             });
 
             this.ws = ws;
         });
-
-        this.wss.on('message', (messageAsString) => {
-            console.log(messageAsString);
-        });
     }
 
     sendScan(scan) {
-        this.ws.send(JSON.stringify(scan));
+        if (this.ws !== null) {
+            this.ws.send(JSON.stringify(scan));
+        } else {
+            console.log("client is disconnected, can't send message...");
+        }
     }
 }
 

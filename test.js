@@ -1,33 +1,10 @@
-var webSocket = require('./web_socket');
+var redis_conn = require('./redis_conn')
 
-var wss = new webSocket.WebSocketServer(7071);
+// get redis connection
+const redis = new redis_conn.RedisConnection('localhost', 6379, 'UPM7iLsubdA70JWauKltS9Flb6NVfHdE9z0OmVOg2DDjwzfVVIRys+DwN+SRJu8dEH0robvfkmzJN27kCEcg2A==');
+const redisCli = redis.client;
 
-wss.initialize();
-
-console.log("wss up");
-
-newScan1 = {
-    id: 4,
-    code: 200,
-    accepted: "accepted",
-    time: '13.02.2022',
-}
-newScan2 = {
-    id: 4,
-    code: 400,
-    accepted: "not accepted",
-    time: '15.02.2022',
-}
-
-setTimeout(() => {
-    wss.sendScan(newScan1);
-}, 7000);
-setTimeout(() => {
-    wss.sendScan(newScan2);
-}, 8000);
-
-
-var webInterface = require('./web_interface');
-
-var wi = new webInterface.WebService(5000);
-
+(async () => {
+    var res = await redisCli.sendCommand(['sort', 'scanIds', 'alpha', 'desc', 'limit', '0', '10']);
+    console.log(res);
+})();

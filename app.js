@@ -2,16 +2,22 @@
 
 /*
  sequence of actions:
- 1. connect to scanner
- 2. start websocket server
- 3. start web server
+ 1. connect to redis server
+ 2. connect to scanner
+ 3. start websocket server
+ 4. start web server
 */
 
-// imports
+// import my modules
+var redis_conn = require('./redis_conn')
 var scanner_c = require("./scanner_conn");
 var wallet_c = require('./wallet_conn');
 var webSocket = require('./web_socket');
 var webInterface = require('./web_interface');
+
+// get redis connection
+const redis = new redis_conn.RedisConnection('localhost', 6379, 'UPM7iLsubdA70JWauKltS9Flb6NVfHdE9z0OmVOg2DDjwzfVVIRys+DwN+SRJu8dEH0robvfkmzJN27kCEcg2A==');
+const redisCli = redis.client;
 
 // get scanner connection
 const scannerConn = new scanner_c.ScannerConn(3118, 4231);
@@ -20,33 +26,28 @@ var scanner = scannerConn.device;
 
 // get websocket server instance
 var wss = new webSocket.WebSocketServer(7071);
-wss.initialize();
-console.log("wss up");
+wss.initialize(redisCli);
 
 // start web interface
-var wi = new webInterface.WebService(5000);
+const webApp = webInterface.startWebService(5000, redis);
 
 // configure scanner connection for actions on new scan
 scanner.on("data", function (data) {
     // remove trailing 0x00
-    zeroData = data.indexOf(0x00);
-    data = data.slice(0, zeroData);
+    zeroDataIdx = data.indexOf(0x00);
+    // remove Q1 prefix with trash
+    precedingTrash = data.indexOf(0x5131);
+    if (zeroDataIdx !== -1 && precedingTrash !== -1) {
+        data = data.slice(precedingTrash+1, zeroDataIdx);
+    }
 
     var passStr = new Buffer.from(data).toString();
-    var [serialNumber, passTypeId] = passStr.split('@');
-    if (serialNumber===undefined || passTypeId===undefined) {
-        console.log("error: serialNumber or passTypeId undefined");
+    var [serialNumber, passType] = passStr.split('@');
+    if (serialNumber===undefined || passType===undefined) {
+        console.log("error: serialNumber or passType undefined");
         return null;
     }
-
-    // remove preceding Q1
-    var q1idx = serialNumber.indexOf("Q1");
-    if (q1idx===-1) {
-        console.log("error: q1idx not present");
-        return null;
-    }
-    serialNumber = serialNumber.slice(q1idx+2);
-
+        
     // let wallet connection handle pass data
-    wallet_c.requestPassStatus(passTypeId, serialNumber);
+    wallet_c.request_save_display_PassStatus(passType, serialNumber, wss, redisCli);
 });

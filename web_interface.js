@@ -1,102 +1,38 @@
-scans = [
-    {
-        id: 1,
-        code: 200,
-        accepted: "accepted",
-        time: new Date().getFullYear(),
-    },
-    {
-        id: 2,
-        code: 409,
-        accepted: "not accepted",
-        time: new Date().getFullYear(),
-    },
-    {
-        id: 3,
-        code: 400,
-        accepted: "not accepted",
-        time: new Date().getFullYear(),
-    },
-    {
-        id: 4,
-        code: 200,
-        accepted: "accepted",
-        time: new Date().getFullYear(),
-    },
-    {
-        id: 1,
-        code: 200,
-        accepted: "accepted",
-        time: new Date().getFullYear(),
-    },
-    {
-        id: 2,
-        code: 409,
-        accepted: "not accepted",
-        time: new Date().getFullYear(),
-    },
-    {
-        id: 3,
-        code: 400,
-        accepted: "not accepted",
-        time: new Date().getFullYear(),
-    },
-    {
-        id: 4,
-        code: 200,
-        accepted: "accepted",
-        time: new Date().getFullYear(),
-    },
-    {
-        id: 1,
-        code: 200,
-        accepted: "accepted",
-        time: new Date().getFullYear(),
-    },
-    {
-        id: 2,
-        code: 409,
-        accepted: "not accepted",
-        time: new Date().getFullYear(),
-    },
-    {
-        id: 3,
-        code: 400,
-        accepted: "not accepted",
-        time: new Date().getFullYear(),
-    },
-    {
-        id: 4,
-        code: 200,
-        accepted: "accepted",
-        time: new Date().getFullYear(),
-    }
-]
-
 // web interface for cashier
 const express = require('express');
 const exphbs = require('express-handlebars');
 
-class WebService {
-    constructor(port) {
-        const app = express();
-        app.engine('hbs', exphbs.engine({
-            defaultLayout: 'main',
-            extname: '.hbs'
-        }));
-        app.set('view engine', 'hbs');
-        app.use(express.static(__dirname + '/public'));
+function startWebService(port, redis) {
+    const app = express();
+    
+    var hbs = exphbs.create({
+        defaultLayout: 'main',
+        extname: '.hbs',
 
-        app.get('/', (req, res) => {
-            res.render('home', {
-                scans: scans
-            });
-        });
+        // add helper to handlebars
+        helpers : {
+            hasUserName: (userName) => {
+                return userName !== '-';
+            }
+        }
+    });
 
-        app.listen(port, () => {
-            console.log('server started');
+    app.engine('hbs', hbs.engine);
+    app.set('view engine', 'hbs');
+    app.use(express.static(__dirname + '/public'));
+
+    app.get('/', (req, res) => {
+        // get last N scans
+        var scans = redis.getLastNScans(8);
+        res.render('home', {
+            scans: scans
         });
-    }
+    });
+
+    app.listen(port, () => {
+    });
+
+    return app;
 }
 
-module.exports = { WebService };
+module.exports = { startWebService };
