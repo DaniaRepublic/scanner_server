@@ -1,7 +1,7 @@
 var redis_conn = require('./redis_conn')
 
 // get redis connection
-const redis = new redis_conn.RedisConnection('localhost', 6379, 'UPM7iLsubdA70JWauKltS9Flb6NVfHdE9z0OmVOg2DDjwzfVVIRys+DwN+SRJu8dEH0robvfkmzJN27kCEcg2A==');
+const redis = new redis_conn.RedisConnection('localhost', 6379, 'password');
 const redisCli = redis.client;
 
 (async () => {
