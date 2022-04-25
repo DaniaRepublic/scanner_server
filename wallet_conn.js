@@ -3,12 +3,12 @@ const https = require("https");
 
 function generateOptions(passType, serialNum) {
     return {
-        hostname: 'f4c2-195-91-208-19.ngrok.io',
+        hostname: 'ipv4',
         port: 443,
         path: encodeURI(`/scan/${ passType }/${ serialNum }`),
         method: 'POST',
         headers: {
-            "Authorization": "Basic wIkT4grB5ay3rL24ARJKYHFDUmqqS3caT+UEyjhRDu0="
+            "Authorization": "Basic <token>"
         }
     }
 }
